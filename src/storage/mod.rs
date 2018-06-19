@@ -3,8 +3,10 @@
 pub use self::data::{ReadStorage, WriteStorage};
 pub use self::flagged::FlaggedStorage;
 pub use self::generic::{GenericReadStorage, GenericWriteStorage};
-pub use self::restrict::{ImmutableParallelRestriction, MutableParallelRestriction,
-                         RestrictedStorage, SequentialRestriction};
+pub use self::restrict::{
+    ImmutableParallelRestriction, MutableParallelRestriction, RestrictedStorage,
+    SequentialRestriction,
+};
 #[cfg(feature = "rudy")]
 pub use self::storages::RudyStorage;
 pub use self::storages::{BTreeStorage, DenseVecStorage, HashMapStorage, NullStorage, VecStorage};
@@ -19,7 +21,7 @@ use shred::{CastFrom, Fetch};
 
 use self::drain::Drain;
 use error::{Error, WrongGeneration};
-use join::{Join, ParJoin};
+use join::Join;
 use world::{Component, EntitiesRes, Entity, Generation, Index};
 
 mod data;
@@ -51,8 +53,6 @@ impl<'a> Join for AntiStorage<'a> {
 }
 
 unsafe impl<'a> DistinctStorage for AntiStorage<'a> {}
-
-unsafe impl<'a> ParJoin for AntiStorage<'a> {}
 
 /// A dynamic storage.
 pub trait AnyStorage {
@@ -381,7 +381,8 @@ where
                 }))
             }
         } else {
-            let gen = self.entities
+            let gen = self
+                .entities
                 .alloc
                 .generations
                 .get(e.id() as usize)
@@ -476,14 +477,6 @@ where
     }
 }
 
-unsafe impl<'a, 'e, T, D> ParJoin for &'a Storage<'e, T, D>
-where
-    T: Component,
-    D: Deref<Target = MaskedStorage<T>>,
-    T::Storage: Sync,
-{
-}
-
 impl<'a, 'e, T, D> Join for &'a mut Storage<'e, T, D>
 where
     T: Component,
@@ -504,14 +497,6 @@ where
         let value: *mut Self::Value = v as *mut Self::Value;
         (*value).get_mut(i)
     }
-}
-
-unsafe impl<'a, 'e, T, D> ParJoin for &'a mut Storage<'e, T, D>
-where
-    T: Component,
-    D: DerefMut<Target = MaskedStorage<T>>,
-    T::Storage: Sync + DistinctStorage,
-{
 }
 
 /// Tries to create a default value, returns an `Err` with the name of the storage and/or component

@@ -4,7 +4,7 @@ use hibitset::{AtomicBitSet, BitSet, BitSetOr};
 use shred::Read;
 
 use error::WrongGeneration;
-use join::{Join, ParJoin};
+use join::Join;
 use storage::WriteStorage;
 use world::Component;
 
@@ -125,7 +125,8 @@ impl Allocator {
             }
 
             if start_from
-                == self.start_from
+                == self
+                    .start_from
                     .compare_and_swap(current, start_from, Ordering::Relaxed)
             {
                 return;
@@ -140,7 +141,8 @@ impl Allocator {
             if !self.alive.contains(i as Index) && !self.raised.add_atomic(i as Index) {
                 self.update_start_from(i + 1);
 
-                let gen = self.generations
+                let gen = self
+                    .generations
                     .get(i as usize)
                     .map(|&gen| {
                         if gen.is_alive() {
@@ -329,7 +331,8 @@ impl<'a> Join for &'a EntitiesRes {
     }
 
     unsafe fn get(v: &mut &'a EntitiesRes, idx: Index) -> Entity {
-        let gen = v.alloc
+        let gen = v
+            .alloc
             .generations
             .get(idx as usize)
             .map(|&gen| {
@@ -343,8 +346,6 @@ impl<'a> Join for &'a EntitiesRes {
         Entity(idx, gen)
     }
 }
-
-unsafe impl<'a> ParJoin for &'a EntitiesRes {}
 
 /// An entity builder from `EntitiesRes`.  Allows building an entity with its
 /// components if you have mutable access to the component storages.

@@ -5,7 +5,7 @@ use std::ops::{Deref, DerefMut};
 use hibitset::BitSet;
 use shred::Fetch;
 
-use join::{Join, ParJoin};
+use join::Join;
 use storage::{MaskedStorage, Storage, UnprotectedStorage};
 use world::{Component, EntitiesRes, Entity, Index};
 
@@ -74,25 +74,6 @@ where
     data: S,
     entities: &'rf Fetch<'st, EntitiesRes>,
     phantom: PhantomData<(C, Restrict)>,
-}
-
-unsafe impl<'rf, 'st: 'rf, C, S, B> ParJoin
-    for &'rf mut RestrictedStorage<'rf, 'st, C, S, B, MutableParallelRestriction>
-where
-    C: Component,
-    S: BorrowMut<C::Storage> + 'rf,
-    B: Borrow<BitSet> + 'rf,
-{
-}
-
-unsafe impl<'rf, 'st: 'rf, C, S, B, Restrict> ParJoin
-    for &'rf RestrictedStorage<'rf, 'st, C, S, B, Restrict>
-where
-    C: Component,
-    S: Borrow<C::Storage> + 'rf,
-    B: Borrow<BitSet> + 'rf,
-    Restrict: ImmutableAliasing,
-{
 }
 
 impl<'rf, 'st: 'rf, C, S, B, Restrict> Join for &'rf RestrictedStorage<'rf, 'st, C, S, B, Restrict>
