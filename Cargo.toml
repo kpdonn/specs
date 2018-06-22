@@ -27,7 +27,8 @@ fnv = "1.0"
 hibitset = { version = "0.5.0"}
 log = "0.4"
 mopa = "0.2"
-shred = "0.7.0"
+shred = { git = "https://github.com/kpdonn/shred", features = ["nightly"]}
+
 shrev = "1.0.0"
 shred-derive = "0.5.0"
 tuple_utils = "0.2"
