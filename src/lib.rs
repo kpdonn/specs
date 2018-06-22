@@ -183,7 +183,11 @@
 //! See the repository's examples directory for more examples.
 //!
 
-pub extern crate shred;
+extern crate arrayvec;
+extern crate fxhash;
+#[macro_use]
+extern crate mopa;
+extern crate smallvec;
 
 extern crate crossbeam;
 #[macro_use]
@@ -192,7 +196,6 @@ extern crate fnv;
 extern crate hibitset;
 #[macro_use]
 extern crate log;
-extern crate mopa;
 extern crate shrev;
 extern crate tuple_utils;
 
@@ -216,6 +219,7 @@ pub mod changeset;
 pub mod error;
 pub mod join;
 pub mod prelude;
+pub mod shred;
 pub mod storage;
 pub mod world;
 
