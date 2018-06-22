@@ -123,7 +123,7 @@ impl<'a, 'b> DispatcherBuilder<'a, 'b> {
     /// * if a system with the same name was already registered.
     pub fn with<T>(mut self, system: T, name: &str, dep: &[&str]) -> Self
     where
-        for<'c> T: System<'c> + Send + 'a,
+        T: for<'c> System<'c> + Send + 'a,
     {
         self.add(system, name, dep);
 

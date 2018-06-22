@@ -20,12 +20,25 @@ pub trait OnChangesSystem<'a> {
     fn run_with_changed(&mut self, changed: &BitSet, data: Self::SysData);
 }
 
-pub trait ChangeAdapter<ChangeType: Event> {
-    fn track_changed(&mut self) -> ReaderId<ChangeType>;
+pub trait ReadChangeAdapter<ChangeType: Event> {
     fn populate_changed(&self, reader_id: &mut ReaderId<ChangeType>, value: &mut BitSet);
 }
 
-impl<'a, T> ChangeAdapter<InsertedFlag> for WriteStorage<'a, T>
+pub trait WriteChangeAdapter<ChangeType: Event> {
+    fn track_changed(&mut self) -> ReaderId<ChangeType>;
+}
+
+impl<'a, T> ReadChangeAdapter<InsertedFlag> for ReadStorage<'a, T>
+where
+    T: Component,
+    T::Storage: Tracked,
+{
+    fn populate_changed(&self, reader_id: &mut ReaderId<InsertedFlag>, value: &mut BitSet) {
+        self.populate_inserted(reader_id, value)
+    }
+}
+
+impl<'a, T> WriteChangeAdapter<InsertedFlag> for WriteStorage<'a, T>
 where
     T: Component,
     T::Storage: Tracked,
@@ -33,23 +46,25 @@ where
     fn track_changed(&mut self) -> ReaderId<InsertedFlag> {
         self.track_inserted()
     }
+}
 
-    fn populate_changed(&self, reader_id: &mut ReaderId<InsertedFlag>, value: &mut BitSet) {
-        self.populate_inserted(reader_id, value)
+impl<'a, T> ReadChangeAdapter<ModifiedFlag> for ReadStorage<'a, T>
+where
+    T: Component,
+    T::Storage: Tracked,
+{
+    fn populate_changed(&self, reader_id: &mut ReaderId<ModifiedFlag>, value: &mut BitSet) {
+        self.populate_modified(reader_id, value)
     }
 }
 
-impl<'a, T> ChangeAdapter<ModifiedFlag> for WriteStorage<'a, T>
+impl<'a, T> WriteChangeAdapter<ModifiedFlag> for WriteStorage<'a, T>
 where
     T: Component,
     T::Storage: Tracked,
 {
     fn track_changed(&mut self) -> ReaderId<ModifiedFlag> {
         self.track_modified()
-    }
-
-    fn populate_changed(&self, reader_id: &mut ReaderId<ModifiedFlag>, value: &mut BitSet) {
-        self.populate_modified(reader_id, value);
     }
 }
 
@@ -77,8 +92,8 @@ where
     T: OnChangesSystem<'a, Target = Target, SysData = SysData, ChangeType = ChangeType>,
     Target: Component,
     Target::Storage: Tracked,
-    for<'all> ReadStorage<'all, Target>: ChangeAdapter<ChangeType>,
-    for<'all> WriteStorage<'all, Target>: ChangeAdapter<ChangeType>,
+    for<'all> ReadStorage<'all, Target>: ReadChangeAdapter<ChangeType>,
+    for<'all> WriteStorage<'all, Target>: WriteChangeAdapter<ChangeType>,
 {
     type SystemData = (
         WriteExpect<'a, TrackData<Target, ChangeType>>,
