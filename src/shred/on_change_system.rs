@@ -89,7 +89,7 @@ unsafe impl<T: TrackedComponent, U: Event> Sync for TrackData<T, U> {}
 
 impl<'a, T, Target, ChangeType: Event, SysData: SystemData<'a>> System<'a> for T
 where
-    T: OnChangesSystem<'a, Target = Target, SysData = SysData, ChangeType = ChangeType>,
+    T: for<'all> OnChangesSystem<'all, Target = Target, SysData = SysData, ChangeType = ChangeType>,
     Target: Component,
     Target::Storage: Tracked,
     for<'all> ReadStorage<'all, Target>: ReadChangeAdapter<ChangeType>,
