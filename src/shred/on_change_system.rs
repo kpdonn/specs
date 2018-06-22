@@ -87,22 +87,19 @@ impl<T: TrackedComponent, U: Event> TrackData<T, U> {
 unsafe impl<T: TrackedComponent, U: Event> Send for TrackData<T, U> {}
 unsafe impl<T: TrackedComponent, U: Event> Sync for TrackData<T, U> {}
 
-impl<'a, T, Target, ChangeType: Event, SysData: SystemData<'a>> System<'a> for T
+impl<'s1, T, X, Y: Event, Z> System<'s1> for T
 where
-    T: for<'all> OnChangesSystem<'all, Target = Target, SysData = SysData, ChangeType = ChangeType>,
-    Target: Component,
-    Target::Storage: Tracked,
-    for<'all> ReadStorage<'all, Target>: ReadChangeAdapter<ChangeType>,
-    for<'all> WriteStorage<'all, Target>: WriteChangeAdapter<ChangeType>,
+    T: for<'all1> OnChangesSystem<'all1, Target = X, ChangeType = Y, SysData = Z>,
+    Z: for<'all2> SystemData<'all2>,
+    X: Component,
+    X::Storage: Tracked,
+    for<'all3> ReadStorage<'all3, X>: ReadChangeAdapter<Y>,
+    for<'all4> WriteStorage<'all4, X>: WriteChangeAdapter<Y>,
 {
-    type SystemData = (
-        WriteExpect<'a, TrackData<Target, ChangeType>>,
-        ReadStorage<'a, Target>,
-        SysData,
-    );
+    type SystemData = (WriteExpect<'s1, TrackData<X, Y>>, ReadStorage<'s1, X>, Z);
 
     fn run(&mut self, (mut data, changes, otherData): Self::SystemData) {
-        let reader: *mut ReaderId<ChangeType> = &mut data.reader;
+        let reader: *mut ReaderId<Y> = &mut data.reader;
         let dirty = &mut data.dirty;
 
         unsafe {
@@ -114,12 +111,12 @@ where
 
     fn setup(&mut self, res: &mut Resources) {
         Self::SystemData::setup(res);
-        let data: TrackData<Target, ChangeType>;
+        let data: TrackData<X, Y>;
         {
-            let mut storage: WriteStorage<Target> = SystemData::fetch(res);
+            let mut storage: WriteStorage<X> = SystemData::fetch(res);
             data = TrackData::new(storage.track_changed());
         }
-        assert!(!res.has_value::<TrackData<Target, ChangeType>>());
+        assert!(!res.has_value::<TrackData<X, Y>>());
         res.insert(data);
     }
 }
